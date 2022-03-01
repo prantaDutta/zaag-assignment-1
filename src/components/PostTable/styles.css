@@ -1,0 +1,13 @@
+.cell1,
+.cell3 {
+  background-color: aquamarine;
+  color: black;
+  padding-right: 20px;
+}
+
+.cell2,
+.cell4 {
+  background-color: cornflowerblue;
+  color: white;
+  padding-right: 20px;
+}
