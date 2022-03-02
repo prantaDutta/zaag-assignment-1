@@ -8,11 +8,9 @@ import {
 } from '@mui/x-data-grid'
 import dayjs from 'dayjs'
 import './styles.css'
-import { useQuery } from 'react-query'
-import axios from 'axios'
-import { API_URL } from '../../util/constants'
 import { CircularProgress } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
+import useFetchPosts from '../../hooks/useFetchPosts'
 
 const columns: GridColDef[] = [
   { field: 'title', headerName: 'Title', flex: 2, cellClassName: 'cell1' },
@@ -48,43 +46,29 @@ export default function PostTable() {
     rows: [],
   })
 
-  const { data, status } = useQuery(
-    ['posts', rowsState.page],
-    async () => {
-      const { data } = await axios.get(
-        `${API_URL}?tags=story&page=${rowsState.page}`
-      )
-      return data
-    },
-    { refetchInterval: 10000, keepPreviousData: true }
-  )
+  const { data, status } = useFetchPosts(rowsState.page)
+
+  const handleData = () => {
+    if (data?.hits === rowsState.rows) {
+      return
+    }
+
+    if (data) {
+      const newRows = { ...rowsState, loading: false, rows: data.hits }
+      setRowsState(newRows)
+    }
+  }
 
   useEffect(() => {
-    let active = true
-
-    ;(async () => {
-      setRowsState((prev) => ({ ...prev, loading: true }))
-
-      if (!active) {
-        return
-      }
-
-      if (data) {
-        setRowsState((prev) => ({ ...prev, loading: false, rows: data.hits }))
-      }
-    })()
-
-    return () => {
-      active = false
-    }
-  }, [rowsState.page, rowsState.pageSize, data])
+    handleData()
+  }, [data])
 
   const navigate = useNavigate()
 
   return (
     <div style={{ width: '100%', marginBottom: 5 }}>
-      {status === 'loading' && <CircularProgress />}
-      {rowsState.rows.length > 0 && (
+      {status === 'loading' && <CircularProgress role="Loader" />}
+      {rowsState.rows?.length > 0 && (
         <DataGrid
           autoHeight
           columns={columns}
